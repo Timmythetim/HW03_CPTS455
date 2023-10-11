@@ -5,14 +5,12 @@ from utils import *
 HOST = "127.0.0.1" 
 PORT = 65432 
 
-
+recievedPacket = Packet()
 def listenLoop(conn):
-    
     while True:
-        size = conn.recv(1024)
-        if int.from_bytes(size, "big") == 0:
-            break
-        data = conn.recv(int.from_bytes(size, "big"))
+        size = conn.recv(64)
+        real_size = int.from_bytes(size, "big")
+        data = conn.recv(real_size)
         recievedPacket = pickle.loads(data)
         recievedPacket.decode_message()
 
@@ -34,9 +32,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     data = pickle.dumps(sendPacket)
                     conn.send(int.to_bytes(len(data), 8))
                     conn.send(data)
+                    sendPacket = Packet()
             except Exception as e:
                 print(e)
-                print("File not found!")
         else:
             sendPacket.is_file = False
             sendPacket.messageBytes = message.encode()
@@ -44,3 +42,4 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = pickle.dumps(sendPacket)
             conn.send(int.to_bytes(len(data), 8))
             conn.send(data)
+            sendPacket = Packet()
